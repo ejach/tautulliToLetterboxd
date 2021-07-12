@@ -57,7 +57,7 @@ def json_parser():
                                                                                                      user, total_count)
     json_data = api_handler(base_url)
     movies = []
-    print('Records to be filtered through: ' + str(total_count))
+    print(f'Records to be filtered through: {str(total_count)}.')
     for _ in json_data:
         # Value to be incremented through each loop pass
         count = 0
@@ -73,7 +73,7 @@ def json_parser():
                 date = int(json_data['response']['data']['data'][count]['date'])
                 watched_date = datetime.fromtimestamp(date).strftime("%Y-%m-%d")
                 movies.append(title + ',' + year + ',' + rating10 + ',' + watched_date)
-                print(str(len(movies)) + '->' + title)
+                print(f'{str(len(movies))} -> {title}')
             count += 1
             if count == total_count:
                 return movies, count
@@ -103,7 +103,3 @@ def check_duplicates():
     # Save the filtered data:
     clean_data.to_csv("output.csv")
     print('Duplicate entries (if any) have been dropped')
-
-
-if __name__ == '__main__':
-    to_csv()
