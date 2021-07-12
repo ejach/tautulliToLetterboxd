@@ -27,3 +27,7 @@ filename=output.csv
 ```bash
 $ python src/main.py
 ```
+### Author
+[Evan J.](https://github.com/ejach)
+
+Inspired by [mtimkovich/plex2letterboxd](https://github.com/mtimkovich/plex2letterboxd)
