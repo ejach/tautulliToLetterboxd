@@ -1,5 +1,5 @@
 # tautulliToLetterboxd
-Export watched content from Tautulli to the Letterboxd CSV Import Format.
+Export watched content from [Tautulli](https://github.com/tautulli/tautulli) to the [Letterboxd CSV Import Format](https://letterboxd.com/about/importing-data/).
 
 ## Installation
 ```bash
