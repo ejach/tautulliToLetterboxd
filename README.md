@@ -1,13 +1,13 @@
 # tautulliToLetterboxd
 Export watched content from Tautulli to the Letterboxd CSV Import Format.
 
-### Installation
+## Installation
 ```bash
 $ git clone https://github.com/ejach/tautulliToLetterboxd.git
 $ cd tautulliToLetterboxd
 $ pip install .
 ```
-### Usage
+## Usage
 1. Must have [Tautulli](https://github.com/tautulli/tautulli) installed
 2. Edit the environment variables in `.env` to point to your Tautulli installation:
 ```bash
@@ -27,7 +27,7 @@ filename=output.csv
 ```bash
 $ python src/main.py
 ```
-### Author
+## Author
 [Evan J.](https://github.com/ejach)
 
 Inspired by [mtimkovich/plex2letterboxd](https://github.com/mtimkovich/plex2letterboxd)
