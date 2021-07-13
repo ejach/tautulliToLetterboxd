@@ -5,7 +5,7 @@ Export watched content from [Tautulli](https://github.com/tautulli/tautulli) to 
 ```bash
 $ git clone https://github.com/ejach/tautulliToLetterboxd.git
 $ cd tautulliToLetterboxd
-$ pip install .
+$ pip install -r requirements.txt
 ```
 ## Usage
 1. Must have [Tautulli](https://github.com/tautulli/tautulli) installed
@@ -27,6 +27,7 @@ filename=output.csv
 ```bash
 $ python src/main.py
 ```
+4. Upload the output file to https://letterboxd.com/import/
 ## Author
 [Evan J.](https://github.com/ejach)
 
