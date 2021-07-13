@@ -45,8 +45,8 @@ def get_length():
     base_url = '{0}/api/v2?apikey={1}&cmd=get_history&media_type=movie&search={2}'.format(baseurl, token, user)
     json_data = api_handler(base_url)
     for _ in json_data:
-        tot_count = json_data['response']['data']['recordsFiltered']
-        return int(tot_count)
+        tot_count = int(json_data['response']['data']['recordsFiltered'])
+        return tot_count
 
 
 # Handles parsing the JSON from the API output
