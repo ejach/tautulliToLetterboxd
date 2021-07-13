@@ -6,6 +6,7 @@ from datetime import datetime
 import pandas as pd
 import requests as requests
 from dotenv import load_dotenv
+from halo import Halo
 
 # Loads the .env file for the credentials
 load_dotenv()
@@ -32,8 +33,7 @@ def rating_handler(rating):
         root = json_handler['response']['data']
         # If root is empty, return empty string
         if root == {}:
-            user_rating = ''
-            return user_rating
+            return ''
         # Else, return user set rating
         else:
             user_rating = json_handler['response']['data']['user_rating']
@@ -53,11 +53,15 @@ def get_length():
 def json_parser():
     # Gets the total count of entries recorded and assigns it to an integer
     total_count = get_length()
+    # URL to obtain the records from with the total_count passed
     base_url = '{0}/api/v2?apikey={1}&cmd=get_history&media_type=movie&search={2}&length={3}'.format(baseurl, token,
                                                                                                      user, total_count)
+    # Sends the final URL to the api_handler
     json_data = api_handler(base_url)
+    # Loading animation
+    loading = Halo(spinner='bouncingBar')
     movies = []
-    print(f'Records to be filtered through: {str(total_count)}.')
+    print(f'Records to be filtered through: {str(total_count)}')
     for _ in json_data:
         # Value to be incremented through each loop pass
         count = 0
@@ -67,27 +71,36 @@ def json_parser():
             watched_status = json_data['response']['data']['data'][count]['watched_status']
             # Filters only content that has been watched
             if watched_status == 1:
+                # Gets the title
                 title = str(json_data['response']['data']['data'][count]['title'])
+                # Gets the release year
                 year = str(json_data['response']['data']['data'][count]['year'])
+                # Gets the user_rating from the rating_handler and returns a value if it exists
                 rating10 = rating_handler(str(json_data['response']['data']['data'][count]['rating_key']))
-                date = int(json_data['response']['data']['data'][count]['date'])
-                watched_date = datetime.fromtimestamp(date).strftime("%Y-%m-%d")
+                # Gets the date watched then puts it in YYYY-MM-DD format
+                watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])). \
+                    strftime("%Y-%m-%d")
                 movies.append(title + ',' + year + ',' + rating10 + ',' + watched_date)
-                print(f'{str(len(movies))} -> {title}')
+                loading.start(text=f'{str(len(movies))} -> {title}')
             count += 1
+            # When the count variable equals the total recordsFiltered, stop and return the movies list
             if count == total_count:
-                return movies, count
+                # Stop the animation
+                loading.stop()
+                return movies
 
 
 # Handles outputting the JSON values into the Letterboxd CSV format
 def to_csv():
-    movies, count = json_parser()
+    movies = json_parser()
     data_file = open('output.csv', 'w')
     # Header that is specified by Letterboxd
     header = ['Title,Year,Rating10,WatchedDate']
     # Create the CSV writer object
     csv_writer = csv.writer(data_file, quoting=csv.QUOTE_NONE, quotechar=None, delimiter='\n')
+    # Write the header
     csv_writer.writerow(header)
+    # Write the list
     csv_writer.writerow(movies)
     data_file.close()
     print(f'Exported filtered movies to {filename}.')
@@ -98,8 +111,8 @@ def to_csv():
 # Checks if there are duplicates in the CSV output
 def check_duplicates():
     data = pd.read_csv('output.csv', index_col=0)
-    # Drop the duplicates:
+    # Drop the duplicates, keep the last recorded duplicate
     clean_data = data.drop_duplicates(keep='last')
-    # Save the filtered data:
+    # Save the filtered data
     clean_data.to_csv("output.csv")
     print('Duplicate entries (if any) have been dropped')
