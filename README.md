@@ -35,7 +35,3 @@ filename=output.csv
 $ python src/main.py
 ```
 4. Upload the output file to https://letterboxd.com/import/
-## Author
-[Evan J.](https://github.com/ejach)
-
-Inspired by [mtimkovich/plex2letterboxd](https://github.com/mtimkovich/plex2letterboxd)
