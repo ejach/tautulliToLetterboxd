@@ -27,7 +27,7 @@ def api_handler(base_url):
 
 # Handles the rating set by the user for any given movie
 def rating_handler(rating):
-    base_url = '{0}/api/v2?apikey={1}&cmd=get_metadata&rating_key={2}'.format(baseurl, token, rating)
+    base_url = f'{baseurl}/api/v2?apikey={token}&cmd=get_metadata&rating_key={rating}'
     json_handler = api_handler(base_url)
     for _ in json_handler:
         root = json_handler['response']['data']
@@ -42,7 +42,7 @@ def rating_handler(rating):
 
 # Used to get the full length of a list to parse
 def get_length():
-    base_url = '{0}/api/v2?apikey={1}&cmd=get_history&media_type=movie&search={2}'.format(baseurl, token, user)
+    base_url = f'{baseurl}/api/v2?apikey={token}&cmd=get_history&media_type=movie&search={user}'
     json_data = api_handler(base_url)
     for _ in json_data:
         tot_count = int(json_data['response']['data']['recordsFiltered'])
@@ -54,8 +54,7 @@ def json_parser():
     # Gets the total count of entries recorded and assigns it to an integer
     total_count = get_length()
     # URL to obtain the records from with the total_count passed
-    base_url = '{0}/api/v2?apikey={1}&cmd=get_history&media_type=movie&search={2}&length={3}'.format(baseurl, token,
-                                                                                                     user, total_count)
+    base_url = f'{baseurl}/api/v2?apikey={token}&cmd=get_history&media_type=movie&search={user}&length={total_count}'
     # Sends the final URL to the api_handler
     json_data = api_handler(base_url)
     # Loading animation
@@ -80,19 +79,21 @@ def json_parser():
                 # Gets the date watched then puts it in YYYY-MM-DD format
                 watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])). \
                     strftime("%Y-%m-%d")
-                movies.append(title + ',' + year + ',' + rating10 + ',' + watched_date)
+                movies.append(f'{title},{year},{rating10},{watched_date}')
+                # Start the loading animation
                 loading.start(text=f'{str(len(movies))} -> {title}')
             count += 1
             # When the count variable equals the total recordsFiltered, stop and return the movies list
             if count == total_count:
-                # Stop the animation
+                # Stop the loading animation
                 loading.stop()
-                return movies
+                return movies, len(movies)
 
 
 # Handles outputting the JSON values into the Letterboxd CSV format
 def to_csv():
-    movies = json_parser()
+    # Get the movies list and its length
+    movies, movies_length = json_parser()
     data_file = open('output.csv', 'w')
     # Header that is specified by Letterboxd
     header = ['Title,Year,Rating10,WatchedDate']
@@ -103,7 +104,7 @@ def to_csv():
     # Write the list
     csv_writer.writerow(movies)
     data_file.close()
-    print(f'Exported filtered movies to {filename}.')
+    print(f'Exported {movies_length} filtered movies to {filename}.')
     # After writing to the file, check for duplicate entries
     check_duplicates()
 
