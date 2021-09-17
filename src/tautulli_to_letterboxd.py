@@ -1,10 +1,10 @@
-import csv
-import json
-import os
+from csv import QUOTE_NONE, writer
+from json import loads
+from os import environ
 from datetime import datetime
 
-import pandas as pd
-import requests as requests
+from pandas import read_csv
+from requests import get
 from dotenv import load_dotenv
 from halo import Halo
 
@@ -12,17 +12,17 @@ from halo import Halo
 load_dotenv()
 
 # Credentials specified in the .env file
-baseurl = os.environ.get('baseurl')
-token = os.environ.get('token')
-user = os.environ.get('user')
-filename = os.environ.get('filename')
+baseurl = environ.get('baseurl')
+token = environ.get('token')
+user = environ.get('user')
+filename = environ.get('filename')
 
 
 # Handles the Tautulli API
 def api_handler(base_url):
     headers = {'Content-Type': 'application/json'}
-    response = requests.get(base_url, headers=headers)
-    return json.loads(response.text)
+    response = get(base_url, headers=headers)
+    return loads(response.text)
 
 
 # Handles the rating set by the user for any given movie
@@ -78,7 +78,7 @@ def json_parser():
                 rating10 = rating_handler(str(json_data['response']['data']['data'][count]['rating_key']))
                 # Gets the date watched then puts it in YYYY-MM-DD format
                 watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])). \
-                    strftime("%Y-%m-%d")
+                    strftime('%Y-%m-%d')
                 movies.append(f'{title},{year},{rating10},{watched_date}')
                 # Start the loading animation
                 loading.start(text=f'{str(len(movies))} -> {title}')
@@ -98,7 +98,7 @@ def to_csv():
     # Header that is specified by Letterboxd
     header = ['Title,Year,Rating10,WatchedDate']
     # Create the CSV writer object
-    csv_writer = csv.writer(data_file, quoting=csv.QUOTE_NONE, quotechar=None, delimiter='\n')
+    csv_writer = writer(data_file, quoting=QUOTE_NONE, quotechar=None, delimiter='\n')
     # Write the header
     csv_writer.writerow(header)
     # Write the list
@@ -111,9 +111,9 @@ def to_csv():
 
 # Checks if there are duplicates in the CSV output
 def check_duplicates():
-    data = pd.read_csv('output.csv', index_col=0)
+    data = read_csv('output.csv', index_col=0)
     # Drop the duplicates, keep the last recorded duplicate
     clean_data = data.drop_duplicates(keep='last')
     # Save the filtered data
-    clean_data.to_csv("output.csv")
+    clean_data.to_csv('output.csv')
     print('Duplicate entries (if any) have been dropped')
