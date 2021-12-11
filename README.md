@@ -26,19 +26,19 @@ baseurl=http://localhost:8181
 # Tautulli API token
 # Found in Settings > Web Interface > API Key
 token=xxx
-# Username (if set) or email
-user=xxx
 ```
 3. Run using:
 ```bash
-$ python src/main.py [-h] [-i INI] [-o CSV]
+$ python -m tautulli_to_letterboxd [-h] [-i INI] [-o CSV] -u USER
 ```
 ```
 # Export watched movie history from Tautulli in Letterboxd CSV format
 
 optional arguments:
-  -h, --help         show this help message and exit
-  -i INI, --ini INI  config file to read from (default: config.ini)
-  -o CSV, --csv CSV  *.csv file to output data to (default: output.csv)
+  -h, --help            show this help message and exit
+  -i INI, --ini INI     config file to read from (default: config.ini)
+  -o CSV, --csv CSV     *.csv file to output data to (default: output.csv)
+  -u USER, --user USER  The username/email to get history from (default: None)
+
 ```
 4. Upload the output file to https://letterboxd.com/import/
