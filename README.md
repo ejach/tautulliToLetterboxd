@@ -33,7 +33,7 @@ user=xxx
 ```bash
 $ python src/main.py [-h] [-i INI] [-o CSV]
 ```
-```bash
+```
 # Export watched movie history from Tautulli in Letterboxd CSV format
 
 optional arguments:
