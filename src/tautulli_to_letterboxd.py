@@ -1,21 +1,40 @@
+from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
+from configparser import ConfigParser
 from csv import QUOTE_NONE, writer
-from json import loads
-from os import environ
 from datetime import datetime
+from json import loads
 
+from halo import Halo
 from pandas import read_csv
 from requests import get
-from dotenv import load_dotenv
-from halo import Halo
 
-# Loads the .env file for the credentials
-load_dotenv()
 
-# Credentials specified in the .env file
-baseurl = environ.get('baseurl')
-token = environ.get('token')
-user = environ.get('user')
-filename = environ.get('filename')
+# Parse arguments from CLI arguments
+def arg_parse():
+    parser = ArgumentParser(
+        description='Export watched movie history from Tautulli in Letterboxd CSV format',
+        formatter_class=ArgumentDefaultsHelpFormatter)
+    # The *.ini file to read from
+    parser.add_argument('-i', '--ini', default='../config.ini',
+                        help='config file to read from')
+    # The *.csv file to output data to
+    parser.add_argument('-o', '--csv', default='output.csv',
+                        help='*.csv file to output data to')
+    return parser.parse_args()
+
+
+# Construct the argument parser
+args = arg_parse()
+
+# Construct the config parser
+cfg = ConfigParser()
+cfg.read(args.ini)
+
+# Credentials specified in the *.ini file and the CLI arguments
+baseurl = cfg['HOST']['baseurl']
+token = cfg['AUTH']['token']
+user = cfg['AUTH']['user']
+filename = args.csv
 
 
 # Handles the Tautulli API
@@ -32,7 +51,7 @@ def rating_handler(rating):
     for _ in json_handler:
         root = json_handler['response']['data']
         # If root is empty, return empty string
-        if root == {}:
+        if not root:
             return ''
         # Else, return user set rating
         else:
@@ -60,7 +79,7 @@ def json_parser():
     # Loading animation
     loading = Halo(spinner='bouncingBar')
     movies = []
-    print(f'Records to be filtered through: {str(total_count)}')
+    print(f'Exporting movies to {filename}: ')
     for _ in json_data:
         # Value to be incremented through each loop pass
         count = 0
