@@ -38,7 +38,7 @@ $ python src/main.py [-h] [-i INI] [-o CSV]
 
 optional arguments:
   -h, --help         show this help message and exit
-  -i INI, --ini INI  config file to read from (default: ../config.ini)
+  -i INI, --ini INI  config file to read from (default: config.ini)
   -o CSV, --csv CSV  *.csv file to output data to (default: output.csv)
 ```
 4. Upload the output file to https://letterboxd.com/import/
