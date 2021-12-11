@@ -152,6 +152,5 @@ def to_csv():
 def main():
     # Write the collected data to the specified CSV file
     to_csv()
-
     # After writing to the file, check for duplicate entries
     check_duplicates()
