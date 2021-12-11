@@ -22,23 +22,18 @@ $ pip install -r requirements.txt
 # The Tautulli host
 # Default: http://localhost:8181
 baseurl=http://localhost:8181
+[AUTH]
 # Tautulli API token
 # Found in Settings > Web Interface > API Key
-[AUTH]
 token=xxx
 # Username (if set) or email
 user=xxx
-[OUTPUT]
-# File to output to in *.csv format
-# Default: output.csv
-filename=output.csv
-
 ```
 3. Run using:
 ```bash
 $ python src/main.py [-h] [-i INI] [-o CSV]
 ```
-```bash
+```
 # Export watched movie history from Tautulli in Letterboxd CSV format
 
 optional arguments:
