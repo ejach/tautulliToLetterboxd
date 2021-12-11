@@ -15,7 +15,7 @@ def arg_parse():
         description='Export watched movie history from Tautulli in Letterboxd CSV format',
         formatter_class=ArgumentDefaultsHelpFormatter)
     # The *.ini file to read from
-    parser.add_argument('-i', '--ini', default='../config.ini',
+    parser.add_argument('-i', '--ini', default='config.ini',
                         help='config file to read from')
     # The *.csv file to output data to
     parser.add_argument('-o', '--csv', default='output.csv',
@@ -79,7 +79,7 @@ def json_parser():
     # Loading animation
     loading = Halo(spinner='bouncingBar')
     movies = []
-    print(f'Exporting movies to {filename}: ')
+    print(f'Exporting movies to {filename} for user {user}: ')
     for _ in json_data:
         # Value to be incremented through each loop pass
         count = 0
@@ -113,16 +113,15 @@ def json_parser():
 def to_csv():
     # Get the movies list and its length
     movies, movies_length = json_parser()
-    data_file = open(filename, 'w')
-    # Header that is specified by Letterboxd
-    header = ['Title,Year,Rating10,WatchedDate']
-    # Create the CSV writer object
-    csv_writer = writer(data_file, quoting=QUOTE_NONE, quotechar=None, delimiter='\n')
-    # Write the header
-    csv_writer.writerow(header)
-    # Write the list
-    csv_writer.writerow(movies)
-    data_file.close()
+    with open(filename, 'w') as data_file:
+        # Header that is specified by Letterboxd
+        header = ['Title,Year,Rating10,WatchedDate']
+        # Create the CSV writer object
+        csv_writer = writer(data_file, quoting=QUOTE_NONE, quotechar=None, delimiter='\n')
+        # Write the header
+        csv_writer.writerow(header)
+        # Write the list
+        csv_writer.writerow(movies)
     print(f'Exported {movies_length} filtered movies to {filename}.')
     # After writing to the file, check for duplicate entries
     check_duplicates()
@@ -135,4 +134,6 @@ def check_duplicates():
     clean_data = data.drop_duplicates(keep='last')
     # Save the filtered data
     clean_data.to_csv(filename)
-    print('Duplicate entries (if any) have been dropped')
+    total_count = get_length() - clean_data.shape[0] if clean_data.shape[0] else None
+    print(f'{total_count} duplicate entries have been dropped' if total_count else 'No duplicate entries have been '
+                                                                                   'dropped')
