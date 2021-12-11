@@ -31,7 +31,7 @@ token=xxx
 ```bash
 $ python -m tautulli_to_letterboxd [-h] [-i INI] [-o CSV] -u USER
 ```
-```bash
+```
 # Export watched movie history from Tautulli in Letterboxd CSV format
 
 optional arguments:
