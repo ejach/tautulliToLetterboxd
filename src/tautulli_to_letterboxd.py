@@ -6,7 +6,7 @@ from json import loads
 
 from halo import Halo
 from pandas import read_csv
-from requests import get
+from requests import get, exceptions
 
 
 # Parse arguments from CLI arguments
@@ -39,9 +39,12 @@ filename = args.csv
 
 # Handles the Tautulli API
 def api_handler(base_url):
-    headers = {'Content-Type': 'application/json'}
-    response = get(base_url, headers=headers)
-    return loads(response.text)
+    try:
+        headers = {'Content-Type': 'application/json'}
+        response = get(base_url, headers=headers)
+        return loads(response.text)
+    except exceptions.ConnectionError as e:
+        print(str(e) + '\n' + 'API key or Base URL invalid, please try again')
 
 
 # Handles the rating set by the user for any given movie
@@ -80,33 +83,39 @@ def json_parser():
     loading = Halo(spinner='bouncingBar')
     movies = []
     print(f'Exporting movies to {filename} for user {user}: ')
-    for _ in json_data:
-        # Value to be incremented through each loop pass
-        count = 0
-        # While the recordsFiltered doesn't equal our count value, continue
-        while count <= total_count:
-            # String either 1 or 0 that indicates if it has been watched before
-            watched_status = json_data['response']['data']['data'][count]['watched_status']
-            # Filters only content that has been watched
-            if watched_status == 1:
-                # Gets the title
-                title = str(json_data['response']['data']['data'][count]['title'])
-                # Gets the release year
-                year = str(json_data['response']['data']['data'][count]['year'])
-                # Gets the user_rating from the rating_handler and returns a value if it exists
-                rating10 = rating_handler(str(json_data['response']['data']['data'][count]['rating_key']))
-                # Gets the date watched then puts it in YYYY-MM-DD format
-                watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])). \
-                    strftime('%Y-%m-%d')
-                movies.append(f'{title},{year},{rating10},{watched_date}')
-                # Start the loading animation
-                loading.start(text=f'{str(len(movies))} -> {title}')
-            count += 1
-            # When the count variable equals the total recordsFiltered, stop and return the movies list
-            if count == total_count:
-                # Stop the loading animation
-                loading.stop()
-                return movies, len(movies)
+    try:
+        for _ in json_data:
+            # Value to be incremented through each loop pass
+            count = 0
+            # While the recordsFiltered doesn't equal our count value, continue
+            while count <= total_count:
+                # String either 1 or 0 that indicates if it has been watched before
+                watched_status = json_data['response']['data']['data'][count]['watched_status']
+                # Filters only content that has been watched
+                if watched_status == 1:
+                    # Gets the movie name
+                    name = str(json_data['response']['data']['data'][count]['title'])
+                    # Checks if the movie has a comma (,) in it, encapsulates title in quotes "" if true, returns title
+                    # if false
+                    title = '"%s"' % ' '.join([a.strip() for a in name.split('\n') if a]) if ',' in name else name
+                    # Gets the release year
+                    year = str(json_data['response']['data']['data'][count]['year'])
+                    # Gets the user_rating from the rating_handler and returns a value if it exists
+                    rating10 = rating_handler(str(json_data['response']['data']['data'][count]['rating_key']))
+                    # Gets the date watched then puts it in YYYY-MM-DD format
+                    watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])). \
+                        strftime('%Y-%m-%d')
+                    movies.append(f'{title},{year},{rating10},{watched_date}')
+                    # Start the loading animation
+                    loading.start(text=f'{str(len(movies))} -> {title}')
+                count += 1
+                # When the count variable equals the total recordsFiltered, stop and return the movies list
+                if count == total_count:
+                    # Stop the loading animation
+                    loading.stop()
+                    return movies, len(movies)
+    except IndexError as e:
+        print(str(e) + '\n' + 'Invalid user, please check your configuration and try again')
 
 
 # Handles outputting the JSON values into the Letterboxd CSV format
