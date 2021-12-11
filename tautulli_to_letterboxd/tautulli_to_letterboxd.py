@@ -20,21 +20,24 @@ def arg_parse():
     # The *.csv file to output data to
     parser.add_argument('-o', '--csv', default='output.csv',
                         help='*.csv file to output data to')
+    # The username/email to get history from
+    parser.add_argument('-u', '--user', required=True,
+                        help='The username/email to get history from')
     return parser.parse_args()
 
 
 # Construct the argument parser
-args = arg_parse()
+ARGS = arg_parse()
 
 # Construct the config parser
-cfg = ConfigParser()
-cfg.read(args.ini)
+CFG = ConfigParser()
+CFG.read(ARGS.ini)
 
 # Credentials specified in the *.ini file and the CLI arguments
-baseurl = cfg['HOST']['baseurl']
-token = cfg['AUTH']['token']
-user = cfg['AUTH']['user']
-filename = args.csv
+BASEURL = CFG['HOST']['baseurl']
+TOKEN = CFG['AUTH']['token']
+USER = ARGS.user
+FILE_NAME = ARGS.csv
 
 
 # Handles the Tautulli API
@@ -49,7 +52,7 @@ def api_handler(base_url):
 
 # Handles the rating set by the user for any given movie
 def rating_handler(rating):
-    base_url = f'{baseurl}/api/v2?apikey={token}&cmd=get_metadata&rating_key={rating}'
+    base_url = f'{BASEURL}/api/v2?apikey={TOKEN}&cmd=get_metadata&rating_key={rating}'
     json_handler = api_handler(base_url)
     for _ in json_handler:
         root = json_handler['response']['data']
@@ -64,7 +67,7 @@ def rating_handler(rating):
 
 # Used to get the full length of a list to parse
 def get_length():
-    base_url = f'{baseurl}/api/v2?apikey={token}&cmd=get_history&media_type=movie&search={user}'
+    base_url = f'{BASEURL}/api/v2?apikey={TOKEN}&cmd=get_history&media_type=movie&search={USER}'
     json_data = api_handler(base_url)
     for _ in json_data:
         tot_count = int(json_data['response']['data']['recordsFiltered'])
@@ -76,13 +79,13 @@ def json_parser():
     # Gets the total count of entries recorded and assigns it to an integer
     total_count = get_length()
     # URL to obtain the records from with the total_count passed
-    base_url = f'{baseurl}/api/v2?apikey={token}&cmd=get_history&media_type=movie&search={user}&length={total_count}'
+    base_url = f'{BASEURL}/api/v2?apikey={TOKEN}&cmd=get_history&media_type=movie&search={USER}&length={total_count}'
     # Sends the final URL to the api_handler
     json_data = api_handler(base_url)
     # Loading animation
     loading = Halo(spinner='bouncingBar')
     movies = []
-    print(f'Exporting movies to {filename} for user {user}: ')
+    print(f'Exporting movies to {FILE_NAME} for user {USER}: ')
     try:
         for _ in json_data:
             # Value to be incremented through each loop pass
@@ -118,11 +121,23 @@ def json_parser():
         print(str(e) + '\n' + 'Invalid user, please check your configuration and try again')
 
 
+# Checks if there are duplicates in the CSV output
+def check_duplicates():
+    data = read_csv(FILE_NAME, index_col=0)
+    # Drop the duplicates, keep the last recorded duplicate
+    clean_data = data.drop_duplicates(keep='last')
+    # Save the filtered data
+    clean_data.to_csv(FILE_NAME)
+    total_count = get_length() - clean_data.shape[0] if clean_data.shape[0] else None
+    print(f'{total_count} duplicate entries have been dropped' if total_count else 'No duplicate entries have been '
+                                                                                   'dropped')
+
+
 # Handles outputting the JSON values into the Letterboxd CSV format
 def to_csv():
     # Get the movies list and its length
     movies, movies_length = json_parser()
-    with open(filename, 'w') as data_file:
+    with open(FILE_NAME, 'w') as data_file:
         # Header that is specified by Letterboxd
         header = ['Title,Year,Rating10,WatchedDate']
         # Create the CSV writer object
@@ -131,18 +146,12 @@ def to_csv():
         csv_writer.writerow(header)
         # Write the list
         csv_writer.writerow(movies)
-    print(f'Exported {movies_length} filtered movies to {filename}.')
+    print(f'Exported {movies_length} filtered movies to {FILE_NAME}.')
+
+
+def main():
+    # Write the collected data to the specified CSV file
+    to_csv()
+
     # After writing to the file, check for duplicate entries
     check_duplicates()
-
-
-# Checks if there are duplicates in the CSV output
-def check_duplicates():
-    data = read_csv(filename, index_col=0)
-    # Drop the duplicates, keep the last recorded duplicate
-    clean_data = data.drop_duplicates(keep='last')
-    # Save the filtered data
-    clean_data.to_csv(filename)
-    total_count = get_length() - clean_data.shape[0] if clean_data.shape[0] else None
-    print(f'{total_count} duplicate entries have been dropped' if total_count else 'No duplicate entries have been '
-                                                                                   'dropped')
