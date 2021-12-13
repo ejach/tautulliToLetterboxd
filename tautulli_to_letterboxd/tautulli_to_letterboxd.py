@@ -22,7 +22,7 @@ def arg_parse():
                         help='*.csv file to output data to')
     # The username/email to get history from
     parser.add_argument('-u', '--user', required=True,
-                        help='The username/email to get history from')
+                        help='the username/email to get history from')
     return parser.parse_args()
 
 
