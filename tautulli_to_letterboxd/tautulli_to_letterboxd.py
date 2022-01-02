@@ -137,7 +137,7 @@ def check_duplicates():
 def to_csv():
     # Get the movies list and its length
     movies, movies_length = json_parser()
-    with open(FILE_NAME, 'w', encoding="utf-8") as data_file:
+    with open(FILE_NAME, 'w', encoding='utf-8') as data_file:
         # Header that is specified by Letterboxd
         header = ['Title,Year,Rating10,WatchedDate']
         # Create the CSV writer object
