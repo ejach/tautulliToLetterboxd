@@ -128,7 +128,9 @@ def check_duplicates():
     clean_data = data.drop_duplicates(keep='last')
     # Save the filtered data
     clean_data.to_csv(FILE_NAME)
+    # Get the total duplicates dropped if the data entry exists, else return None
     total_count = get_length() - clean_data.shape[0] if clean_data.shape[0] else None
+    # Print the total duplicate entries if there is a total_count, else display the following message
     print(f'{total_count} duplicate entries have been dropped' if total_count else 'No duplicate entries have been '
                                                                                    'dropped')
 
