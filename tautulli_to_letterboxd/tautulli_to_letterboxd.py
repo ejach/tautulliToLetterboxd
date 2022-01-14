@@ -9,7 +9,7 @@ from pandas import read_csv
 from requests import get, exceptions
 
 
-# Parse arguments from CLI arguments
+# Parse arguments from CLI
 def arg_parse():
     parser = ArgumentParser(
         description='Export watched movie history from Tautulli in Letterboxd CSV format',
@@ -118,7 +118,7 @@ def json_parser():
                     loading.stop()
                     return movies, len(movies)
     except IndexError as e:
-        print(str(e) + '\n' + 'Invalid user, please check your configuration and try again')
+        print(str(e) + '\n' + 'Index Error, please check your configuration and try again')
 
 
 # Checks if there are duplicates in the CSV output
@@ -137,22 +137,25 @@ def check_duplicates():
 
 # Handles outputting the JSON values into the Letterboxd CSV format
 def to_csv():
-    # Get the movies list and its length
-    movies, movies_length = json_parser()
-    with open(FILE_NAME, 'w', encoding='utf-8') as data_file:
-        # Header that is specified by Letterboxd
-        header = ['Title,Year,Rating10,WatchedDate']
-        # Create the CSV writer object
-        csv_writer = writer(data_file, quoting=QUOTE_NONE, quotechar=None, delimiter='\n')
-        # Write the header
-        csv_writer.writerow(header)
-        # Write the list
-        csv_writer.writerow(movies)
-    print(f'Exported {movies_length} filtered movies to {FILE_NAME}.')
+    try:
+        # Get the movies list and its length
+        movies, movies_length = json_parser()
+        with open(FILE_NAME, 'w', encoding='utf-8') as data_file:
+            # Header that is specified by Letterboxd
+            header = ['Title,Year,Rating10,WatchedDate']
+            # Create the CSV writer object
+            csv_writer = writer(data_file, quoting=QUOTE_NONE, quotechar=None, delimiter='\n')
+            # Write the header
+            csv_writer.writerow(header)
+            # Write the list
+            csv_writer.writerow(movies)
+        print(f'Exported {movies_length} filtered movies to {FILE_NAME}.')
+        # After writing to the file, check for duplicate entries
+        check_duplicates()
+    except TypeError as e:
+        print(str(e) + '\n' + 'Invalid user, please check your configuration and try again')
 
 
 def main():
     # Write the collected data to the specified CSV file
     to_csv()
-    # After writing to the file, check for duplicate entries
-    check_duplicates()
