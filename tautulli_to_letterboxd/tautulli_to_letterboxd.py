@@ -1,5 +1,3 @@
-from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
-from configparser import ConfigParser
 from csv import QUOTE_NONE, writer
 from datetime import datetime
 from json import loads
@@ -7,37 +5,13 @@ from json import loads
 from halo import Halo
 from pandas import read_csv
 from requests import get, exceptions
+from config import App
 
-
-# Parse arguments from CLI
-def arg_parse():
-    parser = ArgumentParser(
-        description='Export watched movie history from Tautulli in Letterboxd CSV format',
-        formatter_class=ArgumentDefaultsHelpFormatter)
-    # The *.ini file to read from
-    parser.add_argument('-i', '--ini', default='config.ini',
-                        help='config file to read from')
-    # The *.csv file to output data to
-    parser.add_argument('-o', '--csv', default='output.csv',
-                        help='*.csv file to output data to')
-    # The username/email to get history from
-    parser.add_argument('-u', '--user', required=True,
-                        help='the username/email to get history from')
-    return parser.parse_args()
-
-
-# Construct the argument parser
-ARGS = arg_parse()
-
-# Construct the config parser
-CFG = ConfigParser()
-CFG.read(ARGS.ini)
-
-# Credentials specified in the *.ini file and the CLI arguments
-BASEURL = CFG['HOST']['baseurl']
-TOKEN = CFG['AUTH']['token']
-USER = ARGS.user
-FILE_NAME = ARGS.csv
+# Get constants from config class
+BASEURL = App.config('base_url')
+TOKEN = App.config('token')
+USER = App.config('user')
+FILE_NAME = App.config('file_name')
 
 
 # Handles the Tautulli API
