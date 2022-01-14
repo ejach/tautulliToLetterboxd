@@ -16,7 +16,7 @@ $ pip install -r requirements.txt
 ```
 ## Usage
 1. Must have [Tautulli](https://github.com/tautulli/tautulli) installed
-2. Edit the values in `config.ini` to point to your Tautulli installation:
+2. Edit the values in `cfg.ini` to point to your Tautulli installation:
 ```ini
 [HOST]
 # The Tautulli host
@@ -36,7 +36,7 @@ $ python -m tautulli_to_letterboxd [-h] [-i INI] [-o CSV] -u USER
 
 optional arguments:
   -h, --help            show this help message and exit
-  -i INI, --ini INI     config file to read from (default: config.ini)
+  -i INI, --ini INI     config file to read from (default: cfg.ini)
   -o CSV, --csv CSV     *.csv file to output data to (default: output.csv)
   -u USER, --user USER  the username/email to get history from (default: None)
 
