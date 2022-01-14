@@ -8,7 +8,7 @@ def arg_parse():
         description='Export watched movie history from Tautulli in Letterboxd CSV format',
         formatter_class=ArgumentDefaultsHelpFormatter)
     # The *.ini file to read from
-    parser.add_argument('-i', '--ini', default='config.ini',
+    parser.add_argument('-i', '--ini', default='cfg.ini',
                         help='config file to read from')
     # The *.csv file to output data to
     parser.add_argument('-o', '--csv', default='output.csv',
