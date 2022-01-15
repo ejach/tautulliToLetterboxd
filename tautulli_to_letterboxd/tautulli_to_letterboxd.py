@@ -3,6 +3,7 @@ from configparser import ConfigParser
 from csv import QUOTE_NONE, writer
 from datetime import datetime
 from json import loads
+from sys import exit
 
 from halo import Halo
 from pandas import read_csv
@@ -48,6 +49,7 @@ def api_handler(base_url):
         return loads(response.text)
     except exceptions.ConnectionError as e:
         print(str(e) + '\n' + 'API key or Base URL invalid, please try again')
+        exit(1)
 
 
 # Handles the rating set by the user for any given movie
@@ -70,8 +72,11 @@ def get_length():
     base_url = f'{BASE_URL}/api/v2?apikey={TOKEN}&cmd=get_history&media_type=movie&search={USER}'
     json_data = api_handler(base_url)
     for _ in json_data:
-        tot_count = int(json_data['response']['data']['recordsFiltered'])
-        return tot_count
+        try:
+            tot_count = int(json_data['response']['data']['recordsFiltered'])
+            return tot_count
+        except KeyError:
+            exit('API key or Base URL invalid, please try again')
 
 
 # Handles parsing the JSON from the API output
@@ -118,7 +123,7 @@ def json_parser():
                     loading.stop()
                     return movies, len(movies)
     except IndexError as e:
-        print(str(e) + '\n' + 'Index Error, please check your configuration and try again')
+        exit(str(e) + '\n' + 'Index Error, please check your configuration and try again')
 
 
 # Checks if there are duplicates in the CSV output
@@ -153,7 +158,7 @@ def to_csv():
         # After writing to the file, check for duplicate entries
         check_duplicates()
     except TypeError as e:
-        print(str(e) + '\n' + 'Invalid user, please check your configuration and try again')
+        exit(str(e) + '\n' + 'Invalid user, please check your configuration and try again')
 
 
 def main():
