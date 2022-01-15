@@ -15,7 +15,7 @@ $ cd tautulliToLetterboxd
 $ pip install -r requirements.txt
 ```
 ## Usage
-1. Must have [Tautulli](https://github.com/tautulli/tautulli) (Atleast v2.1.34) installed
+1. Must have [Tautulli](https://github.com/tautulli/tautulli) (atleast v2.1.34) installed
 2. Edit the values in `config.ini` to point to your Tautulli installation:
 ```ini
 [HOST]
