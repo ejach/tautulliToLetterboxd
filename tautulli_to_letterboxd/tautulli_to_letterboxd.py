@@ -6,7 +6,6 @@ from json import loads
 from sys import exit
 
 from halo import Halo
-from pandas import read_csv
 from requests import get, exceptions
 
 
@@ -58,9 +57,9 @@ def rating_handler(rating):
     json_handler = api_handler(base_url)
     for _ in json_handler:
         root = json_handler['response']['data']
-        # If root is empty, return empty string
+        # If root is empty, return
         if not root:
-            return ''
+            return
         # Else, return user set rating
         else:
             user_rating = json_handler['response']['data']['user_rating']
@@ -113,31 +112,20 @@ def json_parser():
                     # Gets the date watched then puts it in YYYY-MM-DD format
                     watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])). \
                         strftime('%Y-%m-%d')
+                    # Append the movie entries to the list
                     movies.append(f'{title},{year},{rating10},{watched_date}')
                     # Start the loading animation
                     loading.start(text=f'{str(len(movies))} -> {title}')
                 count += 1
                 # When the count variable equals the total recordsFiltered, stop and return the movies list
                 if count == total_count:
+                    # Drop the duplicates if any exist
+                    movies = [i for n, i in enumerate(movies) if i not in movies[:n]]
                     # Stop the loading animation
                     loading.stop()
                     return movies, len(movies)
     except IndexError as e:
         exit(str(e) + '\n' + 'Index Error, please check your configuration and try again')
-
-
-# Checks if there are duplicates in the CSV output
-def check_duplicates():
-    data = read_csv(FILE_NAME, index_col=0)
-    # Drop the duplicates, keep the last recorded duplicate
-    clean_data = data.drop_duplicates(keep='last')
-    # Save the filtered data
-    clean_data.to_csv(FILE_NAME)
-    # Get the total duplicates dropped if the data entry exists, else return None
-    total_count = get_length() - clean_data.shape[0] if clean_data.shape[0] else None
-    # Print the total duplicate entries if there is a total_count, else display the following message
-    print(f'{total_count} duplicate entries have been dropped' if total_count else 'No duplicate entries have been '
-                                                                                   'dropped')
 
 
 # Handles outputting the JSON values into the Letterboxd CSV format
@@ -155,8 +143,6 @@ def to_csv():
             # Write the list
             csv_writer.writerow(movies)
         print(f'Exported {movies_length} filtered movies to {FILE_NAME}.')
-        # After writing to the file, check for duplicate entries
-        check_duplicates()
     except TypeError as e:
         exit(str(e) + '\n' + 'Invalid user, please check your configuration and try again')
 
