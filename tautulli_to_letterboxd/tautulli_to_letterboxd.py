@@ -112,15 +112,14 @@ def json_parser():
                     # Gets the date watched then puts it in YYYY-MM-DD format
                     watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])). \
                         strftime('%Y-%m-%d')
-                    # Append the movie entries to the list
-                    movies.append(f'{title},{year},{rating10},{watched_date}')
+                    # Append the movie entries to the list and drop the duplicates if any exist
+                    movies.append(f'{title},{year},{rating10},{watched_date}') if \
+                        f'{title},{year},{rating10},{watched_date}' not in movies else None
                     # Start the loading animation
                     loading.start(text=f'{str(len(movies))} -> {title}')
                 count += 1
                 # When the count variable equals the total recordsFiltered, stop and return the movies list
                 if count == total_count:
-                    # Drop the duplicates if any exist
-                    movies = [i for n, i in enumerate(movies) if i not in movies[:n]]
                     # Stop the loading animation
                     loading.stop()
                     return movies, len(movies)
