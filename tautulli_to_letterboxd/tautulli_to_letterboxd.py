@@ -47,8 +47,7 @@ def api_handler(base_url):
         response = get(base_url, headers=headers)
         return loads(response.text)
     except exceptions.ConnectionError as e:
-        print(str(e) + '\n' + 'API key or Base URL invalid, please try again')
-        exit(1)
+        exit(str(e) + '\n' + 'Base URL invalid, please try again')
 
 
 # Handles the rating set by the user for any given movie
@@ -75,7 +74,7 @@ def get_length():
             tot_count = int(json_data['response']['data']['recordsFiltered'])
             return tot_count
         except KeyError:
-            exit('API key or Base URL invalid, please try again')
+            exit('API key invalid, please try again')
 
 
 # Handles parsing the JSON from the API output
@@ -112,9 +111,9 @@ def json_parser():
                     # Gets the date watched then puts it in YYYY-MM-DD format
                     watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])). \
                         strftime('%Y-%m-%d')
+                    row = f'{title},{year},{rating10},{watched_date}'
                     # Append the movie entries to the list and drop the duplicates if any exist
-                    movies.append(f'{title},{year},{rating10},{watched_date}') if \
-                        f'{title},{year},{rating10},{watched_date}' not in movies else None
+                    movies.append(row) if row not in movies else None
                     # Start the loading animation
                     loading.start(text=f'{str(len(movies))} -> {title}')
                 count += 1
