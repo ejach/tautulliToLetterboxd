@@ -43,8 +43,7 @@ FILE_NAME = ARGS.csv
 # Handles the Tautulli API
 def api_handler(base_url):
     try:
-        headers = {'Content-Type': 'application/json'}
-        response = get(base_url, headers=headers)
+        response = get(base_url, headers={'Content-Type': 'application/json'})
         return loads(response.text)
     except exceptions.ConnectionError as e:
         exit(str(e) + '\n' + 'Base URL invalid, please try again')
@@ -53,16 +52,14 @@ def api_handler(base_url):
 # Handles the rating set by the user for any given movie
 def rating_handler(rating):
     base_url = f'{BASE_URL}/api/v2?apikey={TOKEN}&cmd=get_metadata&rating_key={rating}'
-    json_handler = api_handler(base_url)
-    for _ in json_handler:
-        root = json_handler['response']['data']
+    json_data = api_handler(base_url)
+    for _ in json_data:
         # If root is empty, return
-        if not root:
+        if not json_data['response']['data']:
             return
         # Else, return user set rating
         else:
-            user_rating = json_handler['response']['data']['user_rating']
-            return user_rating
+            return json_data['response']['data']['user_rating']
 
 
 # Used to get the full length of a list to parse
@@ -71,14 +68,15 @@ def get_length():
     json_data = api_handler(base_url)
     for _ in json_data:
         try:
-            tot_count = int(json_data['response']['data']['recordsFiltered'])
-            return tot_count
+            # Return the total count of movies to parse
+            return int(json_data['response']['data']['recordsFiltered'])
         except KeyError:
             exit('API key invalid, please try again')
 
 
 # Handles parsing the JSON from the API output
 def json_parser():
+    movies = []
     # Gets the total count of entries recorded and assigns it to an integer
     total_count = get_length()
     # URL to obtain the records from with the total_count passed
@@ -87,7 +85,6 @@ def json_parser():
     json_data = api_handler(base_url)
     # Loading animation
     loading = Halo(spinner='bouncingBar')
-    movies = []
     print(f'Exporting movies to {FILE_NAME} for user {USER}: ')
     try:
         for _ in json_data:
