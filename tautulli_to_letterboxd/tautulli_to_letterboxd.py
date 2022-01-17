@@ -132,12 +132,10 @@ def to_csv():
         # Get the movies list and its length
         movies, movies_length = json_parser()
         with open(FILE_NAME, 'w', encoding='utf-8') as data_file:
-            # Header that is specified by Letterboxd
-            header = ['Title,Year,Rating10,WatchedDate']
             # Create the CSV writer object
             csv_writer = writer(data_file, quoting=QUOTE_NONE, quotechar=None, delimiter='\n')
-            # Write the header
-            csv_writer.writerow(header)
+            # Write the header that is specified by Letterboxd
+            csv_writer.writerow(['Title,Year,Rating10,WatchedDate'])
             # Write the list
             csv_writer.writerow(movies)
         print(f'Exported {movies_length} filtered movies to {FILE_NAME}.')
