@@ -35,7 +35,7 @@ $ python -m tautulli_to_letterboxd [-h] [-i INI] [-o CSV] -u USER
 
 optional arguments:
   -h, --help            show this help message and exit
-  -i INI, --ini INI     config file to read from (default: cfg.ini)
+  -i INI, --ini INI     config file to read from (default: confg.ini)
   -o CSV, --csv CSV     *.csv file to output data to (default: output.csv)
   -u USER, --user USER  the username/email to get history from (default: None)
 
