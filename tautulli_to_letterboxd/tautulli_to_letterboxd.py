@@ -10,7 +10,7 @@ from requests import get, exceptions
 
 
 # Parse arguments from CLI arguments
-def arg_parse():
+def arg_parse() -> iter:
     parser = ArgumentParser(
         description='Export watched movie history from Tautulli in Letterboxd CSV format',
         formatter_class=ArgumentDefaultsHelpFormatter)
