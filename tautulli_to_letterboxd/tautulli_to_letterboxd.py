@@ -41,7 +41,7 @@ FILE_NAME = ARGS.csv
 
 
 # Handles the Tautulli API
-def api_handler(base_url):
+def api_handler(base_url: str) -> dict:
     try:
         response = get(base_url, headers={'Content-Type': 'application/json'})
         return loads(response.text)
@@ -50,7 +50,7 @@ def api_handler(base_url):
 
 
 # Handles the rating set by the user for any given movie
-def rating_handler(rating):
+def rating_handler(rating) -> None or int:
     base_url = f'{BASE_URL}/api/v2?apikey={TOKEN}&cmd=get_metadata&rating_key={rating}'
     json_data = api_handler(base_url)
     for _ in json_data:
@@ -63,7 +63,7 @@ def rating_handler(rating):
 
 
 # Used to get the full length of a list to parse
-def get_length():
+def get_length() -> int:
     base_url = f'{BASE_URL}/api/v2?apikey={TOKEN}&cmd=get_history&media_type=movie&search={USER}'
     json_data = api_handler(base_url)
     for _ in json_data:
@@ -75,7 +75,7 @@ def get_length():
 
 
 # Handles parsing the JSON from the API output
-def json_parser():
+def json_parser() -> tuple:
     movies = []
     # Gets the total count of entries recorded and assigns it to an integer
     total_count = get_length()
@@ -124,7 +124,7 @@ def json_parser():
 
 
 # Handles outputting the JSON values into the Letterboxd CSV format
-def to_csv():
+def to_csv() -> None:
     try:
         # Get the movies list and its length
         movies, movies_length = json_parser()
@@ -138,8 +138,10 @@ def to_csv():
         print(f'Exported {movies_length} filtered movies to {FILE_NAME}.')
     except TypeError as e:
         exit(str(e) + '\n' + 'Invalid user, please check your configuration and try again')
+    except KeyboardInterrupt:
+        exit('\n' + f'Exporting movies to {FILE_NAME} has been halted.')
 
 
-def main():
+def main() -> None:
     # Write the collected data to the specified CSV file
     to_csv()
