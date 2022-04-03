@@ -43,7 +43,8 @@ FILE_NAME = ARGS.csv
 # Handles the Tautulli API
 def api_handler(base_url: str) -> dict:
     try:
-        response = get(base_url, headers={'Content-Type': 'application/json'})
+        api_key = {'apikey': TOKEN}
+        response = get(base_url, headers={'Content-Type': 'application/json'}, params=api_key)
         return loads(response.text)
     except exceptions.ConnectionError as e:
         exit(str(e) + '\n' + 'Base URL invalid, please try again')
@@ -51,7 +52,7 @@ def api_handler(base_url: str) -> dict:
 
 # Handles the rating set by the user for any given movie
 def rating_handler(rating: str) -> None or int:
-    base_url = f'{BASE_URL}/api/v2?apikey={TOKEN}&cmd=get_metadata&rating_key={rating}'
+    base_url = f'{BASE_URL}/api/v2?cmd=get_metadata&rating_key={rating}'
     json_data = api_handler(base_url)
     for _ in json_data:
         # If root is empty, return
@@ -64,7 +65,7 @@ def rating_handler(rating: str) -> None or int:
 
 # Used to get the full length of a list to parse
 def get_length() -> int:
-    base_url = f'{BASE_URL}/api/v2?apikey={TOKEN}&cmd=get_history&media_type=movie&search={USER}'
+    base_url = f'{BASE_URL}/api/v2?cmd=get_history&media_type=movie&search={USER}'
     json_data = api_handler(base_url)
     for _ in json_data:
         try:
@@ -80,7 +81,7 @@ def json_parser() -> tuple:
     # Gets the total count of entries recorded and assigns it to an integer
     total_count = get_length()
     # URL to obtain the records from with the total_count passed
-    base_url = f'{BASE_URL}/api/v2?apikey={TOKEN}&cmd=get_history&media_type=movie&search={USER}&length={total_count}'
+    base_url = f'{BASE_URL}/api/v2?cmd=get_history&media_type=movie&search={USER}&length={total_count}'
     # Sends the final URL to the api_handler
     json_data = api_handler(base_url)
     # Loading animation
