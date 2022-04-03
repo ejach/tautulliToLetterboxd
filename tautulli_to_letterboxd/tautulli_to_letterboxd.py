@@ -34,17 +34,18 @@ CFG = ConfigParser()
 CFG.read(ARGS.ini)
 
 # Credentials specified in the *.ini file and the CLI arguments
-BASE_URL = CFG['HOST']['base_url']
+BASE_URL = CFG['HOST']['base_url'] + '/api/v2'
 TOKEN = CFG['AUTH']['token']
 USER = ARGS.user
 FILE_NAME = ARGS.csv
 
 
 # Handles the Tautulli API
-def api_handler(base_url: str) -> dict:
+def api_handler(params: dict) -> dict:
     try:
-        api_key = {'apikey': TOKEN}
-        response = get(base_url, headers={'Content-Type': 'application/json'}, params=api_key)
+        # Append apikey to params
+        params['apikey'] = TOKEN
+        response = get(BASE_URL, headers={'Content-Type': 'application/json'}, params=params)
         return loads(response.text)
     except exceptions.ConnectionError as e:
         exit(str(e) + '\n' + 'Base URL invalid, please try again')
@@ -52,8 +53,7 @@ def api_handler(base_url: str) -> dict:
 
 # Handles the rating set by the user for any given movie
 def rating_handler(rating: str) -> None or int:
-    base_url = f'{BASE_URL}/api/v2?cmd=get_metadata&rating_key={rating}'
-    json_data = api_handler(base_url)
+    json_data = api_handler(params={'cmd': 'get_metadata', 'rating_key': rating})
     for _ in json_data:
         # If root is empty, return
         if not json_data['response']['data']:
@@ -65,8 +65,7 @@ def rating_handler(rating: str) -> None or int:
 
 # Used to get the full length of a list to parse
 def get_length() -> int:
-    base_url = f'{BASE_URL}/api/v2?cmd=get_history&media_type=movie&search={USER}'
-    json_data = api_handler(base_url)
+    json_data = api_handler(params={'cmd': 'get_history', 'media_type': 'movie', 'search': USER})
     for _ in json_data:
         try:
             # Return the total count of movies to parse
@@ -80,10 +79,8 @@ def json_parser() -> tuple:
     movies = []
     # Gets the total count of entries recorded and assigns it to an integer
     total_count = get_length()
-    # URL to obtain the records from with the total_count passed
-    base_url = f'{BASE_URL}/api/v2?cmd=get_history&media_type=movie&search={USER}&length={total_count}'
-    # Sends the final URL to the api_handler
-    json_data = api_handler(base_url)
+    # Sends the params to the api_handler
+    json_data = api_handler(params={'cmd': 'get_history', 'media_type': 'movie', 'search': USER, 'length': total_count})
     # Loading animation
     loading = Halo(spinner='bouncingBar')
     print(f'Exporting movies to {FILE_NAME} for user {USER}: ')
