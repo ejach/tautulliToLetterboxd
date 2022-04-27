@@ -140,8 +140,6 @@ def to_csv() -> None:
             # Write the list
             csv_writer.writerow(movies)
         print(f'Exported {movies_length} filtered movies to {FILE_NAME}.')
-    except TypeError as e:
-        exit(str(e) + '\n' + 'Invalid user, please check your configuration and try again')
     except KeyboardInterrupt:
         exit('\n' + f'Exporting movies to {FILE_NAME} has been halted.')
 
