@@ -81,42 +81,48 @@ def json_parser() -> tuple:
     total_count = get_length()
     # Sends the params to the api_handler
     json_data = api_handler(params={'cmd': 'get_history', 'media_type': 'movie', 'search': USER, 'length': total_count})
-    # Loading animation
-    loading = Halo(spinner='bouncingBar')
-    print(f'Exporting movies to {FILE_NAME} for user {USER}: ')
     try:
-        for _ in json_data:
-            # Value to be incremented through each loop pass
-            count = 0
-            # While the recordsFiltered doesn't equal our count value, continue
-            while count <= total_count:
-                # String either 1 or 0 that indicates if it has been watched before
-                watched_status = json_data['response']['data']['data'][count]['watched_status']
-                # Filters only content that has been watched
-                if watched_status == 1:
-                    # Gets the movie name
-                    name = str(json_data['response']['data']['data'][count]['title'])
-                    # Checks if the movie has a comma (,) in it, encapsulates title in quotes "" if true, returns title
-                    # if false
-                    title = '"%s"' % ' '.join([a.strip() for a in name.split('\n') if a]) if ',' in name else name
-                    # Gets the release year
-                    year = str(json_data['response']['data']['data'][count]['year'])
-                    # Gets the user_rating from the rating_handler and returns a value if it exists
-                    rating10 = rating_handler(str(json_data['response']['data']['data'][count]['rating_key']))
-                    # Gets the date watched then puts it in YYYY-MM-DD format
-                    watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])). \
-                        strftime('%Y-%m-%d')
-                    row = f'{title},{year},{rating10},{watched_date}'
-                    # Append the movie entries to the list and drop the duplicates if any exist
-                    movies.append(row) if row not in movies else None
-                    # Start the loading animation
-                    loading.start(text=f'{str(len(movies))} -> {title}')
-                count += 1
-                # When the count variable equals the total recordsFiltered, stop and return the movies list
-                if count == total_count:
-                    # Stop the loading animation
-                    loading.stop()
-                    return movies, len(movies)
+        # Make sure the user exists and that they have sufficient watch history
+        if total_count > 0:
+            print(f'Exporting movies to {FILE_NAME} for user {USER}: ')
+            # Loading animation
+            loading = Halo(spinner='bouncingBar')
+            for _ in json_data:
+                # Value to be incremented through each loop pass
+                count = 0
+                # While the recordsFiltered doesn't equal our count value, continue
+                while count <= total_count:
+                    # String either 1 or 0 that indicates if it has been watched before
+                    watched_status = json_data['response']['data']['data'][count]['watched_status']
+                    # Filters only content that has been watched
+                    if watched_status == 1:
+                        # Gets the movie name
+                        name = str(json_data['response']['data']['data'][count]['title'])
+                        # Checks if the movie has a comma (,) in it, encapsulates title in quotes "" if true,
+                        # returns title if false
+                        title = '"%s"' % ' '.join([a.strip() for a in name.split('\n') if a]) if ',' in name else name
+                        # Gets the release year
+                        year = str(json_data['response']['data']['data'][count]['year'])
+                        # Gets the user_rating from the rating_handler and returns a value if it exists
+                        rating10 = rating_handler(str(json_data['response']['data']['data'][count]['rating_key']))
+                        # Gets the date watched then puts it in YYYY-MM-DD format
+                        watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])
+                                                              ).strftime('%Y-%m-%d')
+                        row = f'{title},{year},{rating10},{watched_date}'
+                        # Append the movie entries to the list and drop the duplicates if any exist
+                        movies.append(row) if row not in movies else None
+                        # Start the loading animation
+                        loading.start(text=f'{str(len(movies))} -> {title}')
+                    count += 1
+                    # When the count variable equals the total recordsFiltered, stop and return the movies list
+                    if count == total_count:
+                        # Stop the loading animation
+                        loading.stop()
+                        return movies, len(movies)
+        # Otherwise, exit
+        else:
+            exit('Username is invalid or the specified user has insufficient watch history. '
+                 'Please check your configuration and try again')
     except IndexError as e:
         exit(str(e) + '\n' + 'Index Error, please check your configuration and try again')
 
