@@ -20,7 +20,7 @@ $ pip install -r requirements.txt
 [HOST]
 # The Tautulli host
 # Default: http://localhost:8181
-baseurl=http://localhost:8181
+base_url=http://localhost:8181
 [AUTH]
 # Tautulli API token
 # Found in Settings > Web Interface > API Key
