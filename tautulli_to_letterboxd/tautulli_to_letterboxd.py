@@ -68,8 +68,8 @@ def rating_handler(rating: str) -> None or int:
 
 # Handles parsing the JSON from the API output
 def json_parser() -> tuple:
-    movies = []
     try:
+        movies = []
         # Gets the total count of entries recorded and assigns it to an integer
         total_count = api_handler(params={'cmd': 'get_history', 'media_type': 'movie',
                                           'search': USER})['response']['data']['recordsFiltered']
