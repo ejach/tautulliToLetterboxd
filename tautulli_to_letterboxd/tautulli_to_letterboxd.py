@@ -51,7 +51,7 @@ def api_handler(params: dict) -> dict:
         response = get(BASE_URL, headers={'Content-Type': 'application/json'}, params=params)
         return loads(response.text)
     except exceptions.ConnectionError as e:
-        LOADING.fail('Base URL invalid, please try again'), exit(e)
+        LOADING.fail('Base URL invalid, please try again' + '\n' + str(e))
 
 
 # Handles the rating set by the user for any given movie
@@ -107,9 +107,9 @@ def json_parser() -> tuple:
             LOADING.fail('Username is invalid or the specified user has insufficient watch history. '
                          'Please check your configuration and try again'), exit()
     except IndexError as e:
-        LOADING.fail('Index Error, please check your configuration and try again'), exit(e)
+        LOADING.fail('Index Error, please check your configuration and try again' + '/n' + str(e))
     except KeyError as e:
-        LOADING.fail('API key invalid, please try again'), exit(e)
+        LOADING.fail('API key invalid, please try again' + '\n' + str(e))
 
 
 # Handles outputting the JSON values into the Letterboxd CSV format
@@ -126,9 +126,9 @@ def to_csv() -> None:
             csv_writer.writerow(movies)
         LOADING.succeed(f'Exported {movies_length} filtered movies to {FILE_NAME} from user {USER}.')
     except KeyboardInterrupt:
-        LOADING.fail(f'Exporting movies to {FILE_NAME} has been halted.'), exit()
+        LOADING.fail(f'Exporting movies to {FILE_NAME} has been halted.')
     except JSONDecodeError as e:
-        LOADING.fail('Loading failed. Please check your configuration and try again.'), exit(e)
+        LOADING.fail('Loading failed. Please check your configuration and try again.' + '\n' + str(e))
 
 
 def main() -> None:
