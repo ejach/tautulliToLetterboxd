@@ -2,7 +2,7 @@ from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from configparser import ConfigParser
 from csv import QUOTE_NONE, writer
 from datetime import datetime
-from json import loads
+from json import loads, JSONDecodeError
 from sys import exit
 
 from halo import Halo
@@ -39,6 +39,9 @@ TOKEN = CFG['AUTH']['token']
 USER = ARGS.user
 FILE_NAME = ARGS.csv
 
+# Loading animation
+LOADING = Halo(spinner='bouncingBar')
+
 
 # Handles the Tautulli API
 def api_handler(params: dict) -> dict:
@@ -48,7 +51,7 @@ def api_handler(params: dict) -> dict:
         response = get(BASE_URL, headers={'Content-Type': 'application/json'}, params=params)
         return loads(response.text)
     except exceptions.ConnectionError as e:
-        exit(str(e) + '\n' + 'Base URL invalid, please try again')
+        LOADING.fail('Base URL invalid, please try again'), exit(e)
 
 
 # Handles the rating set by the user for any given movie
@@ -63,68 +66,50 @@ def rating_handler(rating: str) -> None or int:
             return json_data['response']['data']['user_rating']
 
 
-# Used to get the full length of a list to parse
-def get_length() -> int:
-    json_data = api_handler(params={'cmd': 'get_history', 'media_type': 'movie', 'search': USER})
-    for _ in json_data:
-        try:
-            # Return the total count of movies to parse
-            return int(json_data['response']['data']['recordsFiltered'])
-        except KeyError:
-            exit('API key invalid, please try again')
-
-
 # Handles parsing the JSON from the API output
 def json_parser() -> tuple:
     movies = []
-    # Gets the total count of entries recorded and assigns it to an integer
-    total_count = get_length()
-    # Sends the params to the api_handler
-    json_data = api_handler(params={'cmd': 'get_history', 'media_type': 'movie', 'search': USER, 'length': total_count})
     try:
+        # Gets the total count of entries recorded and assigns it to an integer
+        total_count = api_handler(params={'cmd': 'get_history', 'media_type': 'movie',
+                                          'search': USER})['response']['data']['recordsFiltered']
+        # Sends the params to the api_handler
+        json_data = api_handler(params={'cmd': 'get_history', 'media_type': 'movie', 'search': USER,
+                                        'length': total_count})
         # Make sure the user exists and that they have sufficient watch history
         if total_count > 0:
             print(f'Exporting movies to {FILE_NAME} for user {USER}: ')
-            # Loading animation
-            loading = Halo(spinner='bouncingBar')
-            for _ in json_data:
-                # Value to be incremented through each loop pass
-                count = 0
-                # While the recordsFiltered doesn't equal our count value, continue
-                while count <= total_count:
-                    # String either 1 or 0 that indicates if it has been watched before
-                    watched_status = json_data['response']['data']['data'][count]['watched_status']
-                    # Filters only content that has been watched
-                    if watched_status == 1:
-                        # Gets the movie name
-                        name = str(json_data['response']['data']['data'][count]['title'])
-                        # Checks if the movie has a comma (,) in it, encapsulates title in quotes "" if true,
-                        # returns title if false
-                        title = '"%s"' % ' '.join([a.strip() for a in name.split('\n') if a]) if ',' in name else name
-                        # Gets the release year
-                        year = str(json_data['response']['data']['data'][count]['year'])
-                        # Gets the user_rating from the rating_handler and returns a value if it exists
-                        rating10 = rating_handler(str(json_data['response']['data']['data'][count]['rating_key']))
-                        # Gets the date watched then puts it in YYYY-MM-DD format
-                        watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])
-                                                              ).strftime('%Y-%m-%d')
-                        row = f'{title},{year},{rating10},{watched_date}'
-                        # Append the movie entries to the list and drop the duplicates if any exist
-                        movies.append(row) if row not in movies else None
-                        # Start the loading animation
-                        loading.start(text=f'{str(len(movies))} -> {title}')
-                    count += 1
-                    # When the count variable equals the total recordsFiltered, stop and return the movies list
-                    if count == total_count:
-                        # Stop the loading animation
-                        loading.stop()
-                        return movies, len(movies)
+            for count, _ in enumerate(json_data['response']['data']['data']):
+                # String either 1 or 0 that indicates if it has been watched before
+                watched_status = json_data['response']['data']['data'][count]['watched_status']
+                # Filters only content that has been watched
+                if watched_status == 1:
+                    # Gets the movie name
+                    name = str(json_data['response']['data']['data'][count]['title'])
+                    # Checks if the movie has a comma (,) in it, encapsulates title in quotes "" if true,
+                    # returns title if false
+                    title = '"%s"' % ' '.join([a.strip() for a in name.split('\n') if a]) if ',' in name else name
+                    # Gets the release year
+                    year = str(json_data['response']['data']['data'][count]['year'])
+                    # Gets the user_rating from the rating_handler and returns a value if it exists
+                    rating10 = rating_handler(str(json_data['response']['data']['data'][count]['rating_key']))
+                    # Gets the date watched then puts it in YYYY-MM-DD format
+                    watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])
+                                                          ).strftime('%Y-%m-%d')
+                    row = f'{title},{year},{rating10},{watched_date}'
+                    # Append the movie entries to the list and drop the duplicates if any exist
+                    movies.append(row) if row not in movies else None
+                    # Start the loading animation
+                    LOADING.start(text=f'{str(len(movies))} -> {title}')
+            return movies, len(movies)
         # Otherwise, exit
         else:
-            exit('Username is invalid or the specified user has insufficient watch history. '
-                 'Please check your configuration and try again')
+            LOADING.fail('Username is invalid or the specified user has insufficient watch history. '
+                         'Please check your configuration and try again'), exit()
     except IndexError as e:
-        exit(str(e) + '\n' + 'Index Error, please check your configuration and try again')
+        LOADING.fail('Index Error, please check your configuration and try again'), exit(e)
+    except KeyError as e:
+        LOADING.fail('API key invalid, please try again'), exit(e)
 
 
 # Handles outputting the JSON values into the Letterboxd CSV format
@@ -139,9 +124,11 @@ def to_csv() -> None:
             csv_writer.writerow(['Title,Year,Rating10,WatchedDate'])
             # Write the list
             csv_writer.writerow(movies)
-        print(f'Exported {movies_length} filtered movies to {FILE_NAME}.')
+        LOADING.succeed(f'Exported {movies_length} filtered movies to {FILE_NAME} from user {USER}.')
     except KeyboardInterrupt:
-        exit('\n' + f'Exporting movies to {FILE_NAME} has been halted.')
+        LOADING.fail(f'Exporting movies to {FILE_NAME} has been halted.'), exit()
+    except JSONDecodeError as e:
+        LOADING.fail('Loading failed. Please check your configuration and try again.'), exit(e)
 
 
 def main() -> None:
