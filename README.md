@@ -2,7 +2,6 @@
 
 [![PyPI](https://img.shields.io/pypi/v/requests?logo=python&label=requests&style=flat-square&color=FFD43B)](https://pypi.org/project/requests/)
 [![PyPI](https://img.shields.io/pypi/v/halo?logo=python&label=halo&style=flat-square&color=FFD43B)](https://pypi.org/project/halo/)
-[![LGTM](https://img.shields.io/lgtm/grade/python/github/ejach/tautulliToLetterboxd?color=FFD43B&logo=python&style=flat-square)]
 
 
 Export watched content from [Tautulli](https://github.com/tautulli/tautulli) to the [Letterboxd CSV Import Format](https://letterboxd.com/about/importing-data/).
