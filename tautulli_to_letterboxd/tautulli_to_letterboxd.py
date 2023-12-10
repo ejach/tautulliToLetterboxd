@@ -34,7 +34,7 @@ CFG = ConfigParser()
 CFG.read(ARGS.ini)
 
 # Credentials specified in the *.ini file and the CLI arguments
-BASE_URL = CFG['HOST']['base_url'] + '/api/v2'
+BASE_URL = '%s/api/v2' % CFG['HOST']['base_url']
 TOKEN = CFG['AUTH']['token']
 USER = ARGS.user
 FILE_NAME = ARGS.csv
@@ -78,7 +78,7 @@ def json_parser() -> tuple:
                                         'length': total_count})
         # Make sure the user exists and that they have sufficient watch history
         if total_count > 0:
-            print(f'Exporting movies to {FILE_NAME} for user {USER}: ')
+            print('Exporting movies to %s for user %s:' % (FILE_NAME, USER))
             for count, _ in enumerate(json_data['response']['data']['data']):
                 # String either 1 or 0 that indicates if it has been watched before
                 watched_status = json_data['response']['data']['data'][count]['watched_status']
@@ -96,18 +96,18 @@ def json_parser() -> tuple:
                     # Gets the date watched then puts it in YYYY-MM-DD format
                     watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])
                                                           ).strftime('%Y-%m-%d')
-                    row = f'{title},{year},{rating10},{watched_date}'
+                    row = '%s,%s,%s,%s' % (title, year, rating10, watched_date)
                     # Append the movie entries to the list and drop the duplicates if any exist
                     movies.append(row) if row not in movies else None
                     # Start the loading animation
-                    LOADING.start(text=f'{str(len(movies))} -> {title}')
+                    LOADING.start(text='%s -> %s' % (str(len(movies)), title))
             return movies, len(movies)
         # Otherwise, exit
         else:
             LOADING.fail('Username is invalid or the specified user has insufficient watch history. '
                          'Please check your configuration and try again'), exit()
     except IndexError as e:
-        LOADING.fail('Index Error, please check your configuration and try again' + '/n' + str(e))
+        LOADING.fail('Index Error, please check your configuration and try again' + '\n' + str(e))
     except KeyError as e:
         LOADING.fail('API key invalid, please try again' + '\n' + str(e))
 
@@ -124,9 +124,9 @@ def to_csv() -> None:
             csv_writer.writerow(['Title,Year,Rating10,WatchedDate'])
             # Write the list
             csv_writer.writerow(movies)
-        LOADING.succeed(f'Exported {movies_length} filtered movies to {FILE_NAME} from user {USER}.')
+        LOADING.succeed('Exported %s filtered movies to %s from user %s.' % (movies_length, FILE_NAME, USER))
     except KeyboardInterrupt:
-        LOADING.fail(f'Exporting movies to {FILE_NAME} has been halted.')
+        LOADING.fail('Exporting movies to %s has been halted.' % (FILE_NAME))
     except JSONDecodeError as e:
         LOADING.fail('Loading failed. Please check your configuration and try again.' + '\n' + str(e))
 
