@@ -1,2 +1,2 @@
-requests~=2.31.0
+requests~=2.32.1
 halo~=0.0.31 
