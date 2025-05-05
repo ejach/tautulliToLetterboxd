@@ -1,9 +1,10 @@
 from argparse import ArgumentParser, ArgumentDefaultsHelpFormatter
 from configparser import ConfigParser
-from csv import QUOTE_NONE, writer
+from csv import QUOTE_ALL, writer
 from datetime import datetime
 from json import loads, JSONDecodeError
 from sys import exit
+from typing import Optional
 
 from halo import Halo
 from requests import get, exceptions
@@ -34,7 +35,7 @@ CFG = ConfigParser()
 CFG.read(ARGS.ini)
 
 # Credentials specified in the *.ini file and the CLI arguments
-BASE_URL = '%s/api/v2' % CFG['HOST']['base_url']
+BASE_URL = f"{CFG['HOST']['base_url']}/api/v2"
 TOKEN = CFG['AUTH']['token']
 USER = ARGS.user
 FILE_NAME = ARGS.csv
@@ -55,7 +56,7 @@ def api_handler(params: dict) -> dict:
 
 
 # Handles the rating set by the user for any given movie
-def rating_handler(rating: str) -> None or int:
+def rating_handler(rating: str) -> Optional[int]:
     json_data = api_handler(params={'cmd': 'get_metadata', 'rating_key': rating})
     for _ in json_data:
         # If root is empty, return
@@ -78,17 +79,14 @@ def json_parser() -> tuple:
                                         'length': total_count})
         # Make sure the user exists and that they have sufficient watch history
         if total_count > 0:
-            print('Exporting movies to %s for user %s:' % (FILE_NAME, USER))
+            print(f'Exporting movies to {FILE_NAME} for user {USER}:')
             for count, _ in enumerate(json_data['response']['data']['data']):
                 # String either 1 or 0 that indicates if it has been watched before
                 watched_status = json_data['response']['data']['data'][count]['watched_status']
                 # Filters only content that has been watched
                 if watched_status == 1:
-                    # Gets the movie name
-                    name = str(json_data['response']['data']['data'][count]['title'])
-                    # Checks if the movie has a comma (,) in it, encapsulates title in quotes "" if true,
-                    # returns title if false
-                    title = '"%s"' % ' '.join([a.strip() for a in name.split('\n') if a]) if ',' in name else name
+                    # Gets the movie title
+                    title = str(json_data['response']['data']['data'][count]['title'])
                     # Gets the release year
                     year = str(json_data['response']['data']['data'][count]['year'])
                     # Gets the user_rating from the rating_handler and returns a value if it exists
@@ -96,11 +94,11 @@ def json_parser() -> tuple:
                     # Gets the date watched then puts it in YYYY-MM-DD format
                     watched_date = datetime.fromtimestamp(int(json_data['response']['data']['data'][count]['date'])
                                                           ).strftime('%Y-%m-%d')
-                    row = '%s,%s,%s,%s' % (title, year, rating10, watched_date)
+                    row = [title, year, rating10, watched_date]
                     # Append the movie entries to the list and drop the duplicates if any exist
                     movies.append(row) if row not in movies else None
                     # Start the loading animation
-                    LOADING.start(text='%s -> %s' % (str(len(movies)), title))
+                    LOADING.start(text=f'{str(len(movies))} -> {title}')
             return movies, len(movies)
         # Otherwise, exit
         else:
@@ -112,25 +110,21 @@ def json_parser() -> tuple:
         LOADING.fail('API key invalid, please try again' + '\n' + str(e))
 
 
-# Handles outputting the JSON values into the Letterboxd CSV format
+
+# Write the collected data to the specified CSV file
 def to_csv() -> None:
     try:
-        # Get the movies list and its length
         movies, movies_length = json_parser()
-        with open(FILE_NAME, 'w', encoding='utf-8') as data_file:
-            # Create the CSV writer object
-            csv_writer = writer(data_file, quoting=QUOTE_NONE, quotechar=None, delimiter='\n')
-            # Write the header that is specified by Letterboxd
-            csv_writer.writerow(['Title,Year,Rating10,WatchedDate'])
-            # Write the list
-            csv_writer.writerow(movies)
-        LOADING.succeed('Exported %s filtered movies to %s from user %s.' % (movies_length, FILE_NAME, USER))
+        with open(FILE_NAME, 'w', encoding='utf-8', newline='') as data_file:
+            csv_writer = writer(data_file, quoting=QUOTE_ALL, quotechar='"')
+            csv_writer.writerow(['Title', 'Year', 'Rating10', 'WatchedDate'])
+            for movie in movies:
+                csv_writer.writerow(movie)
+        LOADING.succeed(f'Exported {movies_length} filtered movies to {FILE_NAME} from user {USER}.')
     except KeyboardInterrupt:
-        LOADING.fail('Exporting movies to %s has been halted.' % (FILE_NAME))
+        LOADING.fail(f'Exporting movies to {FILE_NAME} has been halted.')
     except JSONDecodeError as e:
-        LOADING.fail('Loading failed. Please check your configuration and try again.' + '\n' + str(e))
-
+        LOADING.fail(f'Loading failed. Please check your configuration and try again.\n{str(e)}')
 
 def main() -> None:
-    # Write the collected data to the specified CSV file
     to_csv()
