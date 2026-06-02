@@ -5,9 +5,11 @@ from datetime import datetime
 from json import loads, JSONDecodeError
 from sys import exit
 from typing import Optional, Tuple
+from urllib.error import URLError
+from urllib.parse import urlencode
+from urllib.request import Request, urlopen
 
-from halo import Halo
-from requests import get, exceptions
+from tautulli_to_letterboxd.spinner import Loading
 
 
 # Parse arguments from CLI arguments
@@ -41,25 +43,33 @@ USER = ARGS.user
 FILE_NAME = ARGS.csv
 
 # Loading animation
-LOADING = Halo(spinner='bouncingBar')
+LOADING = Loading()
 
 
 # Handles the Tautulli API
 def api_handler(params: dict) -> dict:
     try:
-        # Append apikey to params
         params['apikey'] = TOKEN
-        response = get(BASE_URL, headers={'Content-Type': 'application/json'}, params=params)
-        return loads(response.text)
-    except exceptions.ConnectionError as e:
-        LOADING.fail('Base URL invalid, please try again' + '\n' + str(e))
+        query = urlencode(params)
+        url = f"{BASE_URL}?{query}"
+        req = Request(
+            url,
+            headers={'Content-Type': 'application/json'},
+            method='GET'
+        )
+        with urlopen(req) as response:
+            return loads(response.read().decode('utf-8'))
+
+    except URLError as e:
+        LOADING.fail('Base URL invalid, please try again\n' + str(e))
+        exit(1)
 
 
 # Handles the rating set by the user for any given movie
 def rating_handler(rating_key: str) -> Optional[Tuple[str, str, str]]:
-    user_rating = ""
-    tmdb_id = ""
-    imdb_id = ""
+    user_rating = ''
+    tmdb_id = ''
+    imdb_id = ''
     json_data = api_handler(params={'cmd': 'get_metadata', 'rating_key': rating_key})
     for _ in json_data:
         # If root is empty, return
@@ -67,10 +77,11 @@ def rating_handler(rating_key: str) -> Optional[Tuple[str, str, str]]:
             user_rating = json_data['response']['data']['user_rating']
             for guid in json_data['response']['data']['guids']:
                 if guid.startswith('tmdb'):
-                    tmdb_id = guid.split("://")[1]
+                    tmdb_id = guid.split('://')[1]
                 if guid.startswith('imdb'):
-                    imdb_id = guid.split("://")[1]
+                    imdb_id = guid.split('://')[1]
     return user_rating, tmdb_id, imdb_id
+
 
 # Handles parsing the JSON from the API output
 def json_parser() -> tuple:
